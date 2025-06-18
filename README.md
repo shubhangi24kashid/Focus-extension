@@ -1,4 +1,4 @@
-# ⏳ Pomodoro Focus
+# ⏳ Focus Extension
 
 A sleek, responsive Chrome Extension that helps you stay productive using the Pomodoro technique—with a built-in timer, site blocking, AI-powered break tips, and light/dark mode.
 
