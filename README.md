@@ -24,10 +24,10 @@ A sleek, responsive Chrome Extension that helps you stay productive using the Po
    ```bash
    npm install
    npm run build
-   Load the extension in Chrome:
 
-3. Go to chrome://extensions
+3. Load the extension in Chrome:
    ```bash
+   Go to chrome://extensions
    Enable Developer mode
    Click Load unpacked
    Select the dist/ folder
