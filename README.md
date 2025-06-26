@@ -1,12 +1,33 @@
-# React + Vite
+# ⏳ Focus Extension
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A sleek, responsive Chrome Extension that helps you stay productive using the Pomodoro technique—with a built-in timer, site blocking, AI-powered break tips, and light/dark mode.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Features
 
-## Expanding the ESLint configuration
+- Persistent Pomodoro timer (even when popup is closed)
+- Website blocking during focus sessions (e.g., Facebook)
+- Random wellness tips after each Pomodoro
+- Dark and Light theme toggle
+- Fully responsive and minimalist UI
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+## 📦 Installation
+
+1. Clone the repo:
+   ```bash
+   git clone https://github.com/shubhangi24kashid/Focus-extension.git
+
+2. Build the project (if using a bundler like Vite or React):
+   ```bash
+   npm install
+   npm run build
+
+3. Load the extension in Chrome:
+   ```bash
+   Go to chrome://extensions
+   Enable Developer mode
+   Click Load unpacked
+   Select the dist/ folder
