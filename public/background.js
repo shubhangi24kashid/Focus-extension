@@ -1,7 +1,6 @@
 let seconds = 1500;
 let isRunning = false;
 let interval = null;
-const RULE_ID = 1;
 
 function broadcastUpdate() {
   chrome.runtime.sendMessage({
@@ -47,37 +46,46 @@ function resetTimer() {
 }
 
 function applyBlockingRules() {
-  chrome.declarativeNetRequest.getDynamicRules((rules) => {
-    const alreadyExists = rules.some(rule => rule.id === RULE_ID);
+  chrome.storage.sync.get(["blockedSites"], (res) => {
+    const sites = res.blockedSites || [];
 
-    if (!alreadyExists) {
-      chrome.declarativeNetRequest.updateDynamicRules({
-        addRules: [
-          {
-            id: RULE_ID,
-            priority: 1,
-            action: { type: "block" },
-            condition: {
-              urlFilter: "facebook.com",
-              resourceTypes: ["main_frame"]
-            }
-          }
-        ],
-        removeRuleIds: []
-      }, () => console.log("🔒 Site blocked"));
-    } else {
-      console.log("⚠️ Rule already exists. Skipping re-add.");
-    }
+    // Create rules with unique IDs starting from 100
+    const rules = sites.map((site, index) => ({
+      id: 100 + index,
+      priority: 1,
+      action: { type: "block" },
+      condition: {
+        urlFilter: site,
+        resourceTypes: ["main_frame"],
+      },
+    }));
+
+    const ruleIdsToRemove = rules.map(r => r.id);
+
+    chrome.declarativeNetRequest.updateDynamicRules(
+      {
+        removeRuleIds: ruleIdsToRemove,
+        addRules: rules,
+      },
+      () => console.log("🔒 Sites blocked:", sites)
+    );
   });
 }
 
 function removeBlockingRules() {
-  chrome.declarativeNetRequest.updateDynamicRules({
-    removeRuleIds: [RULE_ID],
-    addRules: []
-  }, () => console.log("✅ Site unblocked"));
+  chrome.declarativeNetRequest.getDynamicRules((rules) => {
+    const ruleIds = rules.map((r) => r.id).filter(id => id >= 100);
+    chrome.declarativeNetRequest.updateDynamicRules(
+      {
+        removeRuleIds: ruleIds,
+        addRules: [],
+      },
+      () => console.log("✅ All dynamic rules removed")
+    );
+  });
 }
 
+// Handle messages from popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log("📩 Message received:", message);
 
@@ -89,4 +97,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
   if (message.action === "block") applyBlockingRules();
   if (message.action === "unblock") removeBlockingRules();
+  if (message.action === "updateBlockList") {
+    removeBlockingRules(); // Clean up
+    setTimeout(() => applyBlockingRules(), 200); // Delay to ensure clean removal
+  }
 });

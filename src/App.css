@@ -104,3 +104,30 @@ button:hover {
     align-items: center;
   }
 }
+
+.tabs {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.tabs button {
+  padding: 0.5rem 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  border: none;
+  border-radius: 6px;
+  background: #ddd;
+}
+
+.tabs button:hover {
+  background: #bbb;
+}
+
+input[type="text"] {
+  padding: 5px;
+  width: 70%;
+  margin-right: 5px;
+}
+
