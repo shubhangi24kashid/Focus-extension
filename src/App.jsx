@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./App.css";
+import { getAISuggestion } from "./api/aiSuggest";
+
 
 export default function App() {
   const [seconds, setSeconds] = useState(1500);
@@ -26,14 +28,8 @@ export default function App() {
         setIsRunning(msg.isRunning);
         if (msg.seconds === 0) {
           setSessionCount((prev) => prev + 1);
-          const tips = [
-            "Take a short walk ✨",
-            "Drink a glass of water 💧",
-            "Stretch your body 🏋️",
-            "Do deep breathing 🧘",
-            "Look at something 20 feet away for 20 seconds 👁",
-          ];
-          setTip(tips[Math.floor(Math.random() * tips.length)]);
+          getAISuggestion().then(setTip);
+
         }
       }
     };
