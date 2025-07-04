@@ -1,130 +1,88 @@
-import React, { useEffect, useState } from "react";
-import "./App.css";
-import { getAISuggestion } from "./api/aiSuggest";
-
+// File: src/App.jsx
+import React from "react";
+import "./assets/App.css";
+import Header from "./components/Header";
+import Tabs from "./components/Tabs";
+import StatsGrid from "./components/StatsGrid";
+import TimerTab from "./components/TimerTab";
+import SitesTab from "./components/SitesTab";
+import AnalyticsTab from "./components/AnalyticsTab";
+import AchievementsTab from "./components/AchievementsTab";
+import SettingsTab from "./components/SettingsTab";
+import usePomodoroLogic from "./hooks/usePomodoroLogic";
 
 export default function App() {
-  const [seconds, setSeconds] = useState(1500);
-  const [isRunning, setIsRunning] = useState(false);
-  const [tip, setTip] = useState("");
-  const [darkMode, setDarkMode] = useState(false);
-  const [sessionCount, setSessionCount] = useState(0);
-  const [tab, setTab] = useState("timer");
+  const logic = usePomodoroLogic();
 
-  const [blockedSites, setBlockedSites] = useState([]);
-  const [newSite, setNewSite] = useState("");
-
-  // Load timer and session info
-  useEffect(() => {
-    requestStatus();
-
-    chrome.storage.sync.get(["blockedSites"], (res) => {
-      setBlockedSites(res.blockedSites || []);
-    });
-
-    const listener = (msg) => {
-      if (msg.action === "update") {
-        setSeconds(msg.seconds);
-        setIsRunning(msg.isRunning);
-        if (msg.seconds === 0) {
-          setSessionCount((prev) => prev + 1);
-          getAISuggestion().then(setTip);
-
-        }
-      }
-    };
-
-    chrome.runtime.onMessage.addListener(listener);
-    return () => chrome.runtime.onMessage.removeListener(listener);
-  }, []);
-
-  const requestStatus = () => {
-    chrome.runtime.sendMessage({ action: "getStatus" }, (res) => {
-      setSeconds(res.seconds);
-      setIsRunning(res.isRunning);
-    });
-  };
-
-  const toggleTimer = () => {
-    chrome.runtime.sendMessage({ action: isRunning ? "pause" : "start" });
-    chrome.runtime.sendMessage({ action: "block" });
-  };
-
-  const reset = () => {
-    chrome.runtime.sendMessage({ action: "reset" });
-    setTip("");
-  };
-
-  const toggleTheme = () => {
-    setDarkMode((prev) => !prev);
-  };
-
-  const formatTime = (s) => {
-    const m = Math.floor(s / 60);
-    const sec = s % 60;
-    return `${m.toString().padStart(2, "0")}:${sec.toString().padStart(2, "0")}`;
-  };
-
-  const addSite = () => {
-    if (!newSite.trim()) return;
-    const updated = [...blockedSites, newSite.trim()];
-    chrome.storage.sync.set({ blockedSites: updated }, () => {
-      setBlockedSites(updated);
-      setNewSite("");
-      chrome.runtime.sendMessage({ action: "updateBlockList" });
-    });
-  };
-
-  const removeSite = (site) => {
-    const updated = blockedSites.filter(s => s !== site);
-    chrome.storage.sync.set({ blockedSites: updated }, () => {
-      setBlockedSites(updated);
-      chrome.runtime.sendMessage({ action: "updateBlockList" });
-    });
+  // Dynamically render tab content based on current tab
+  const renderTab = () => {
+    switch (logic.tab) {
+      case "timer":
+        return <TimerTab {...logic} />;
+      case "sites":
+        return <SitesTab {...logic} />;
+      case "analytics":
+        return <AnalyticsTab {...logic} />;
+      case "achievements":
+        return <AchievementsTab {...logic} />;
+      case "settings":
+        return <SettingsTab {...logic} />;
+      default:
+        return <div style={{ padding: "2rem" }}>🧪 Debug: Tab temporarily removed</div>;
+    }
   };
 
   return (
-    <div className={`app ${darkMode ? "dark" : "light"}`}>
-      <div className="tabs">
-        <button onClick={() => setTab("timer")}>⏳ Timer</button>
-        <button onClick={() => setTab("sites")}>🚫 Blocked Sites</button>
-      </div>
-
-      {tab === "timer" ? (
-        <>
-          <h1>Pomodoro Timer</h1>
-          <div className="timer">{formatTime(seconds)}</div>
-          <div className="controls">
-            <button onClick={toggleTimer} className="start-btn">
-              {isRunning ? "Pause" : "Start"}
-            </button>
-            <button onClick={reset} className="reset-btn">Reset</button>
-            <button onClick={toggleTheme} className="theme-btn">
-              {darkMode ? "☀️ Light" : "🌙 Dark"}
-            </button>
+    <div className={`app ${logic.darkMode ? "dark" : "light"}`}>
+      {/* Connection Status Banner */}
+      {logic.connectionStatus !== "connected" && logic.connectionStatus !== "dev-mode" && (
+        <div className="debug-banner">
+          <div className="debug-status">
+            Status: {logic.connectionStatus}
+            {logic.lastError && <span className="debug-error"> | Error: {logic.lastError}</span>}
           </div>
-          <div className="session-count">🌟 Sessions: {sessionCount}</div>
-          {tip && <div className="tip">💡 Tip: {tip}</div>}
-        </>
-      ) : (
-        <>
-          <h2>Blocked Sites</h2>
-          <input
-            type="text"
-            value={newSite}
-            placeholder="e.g. facebook.com"
-            onChange={(e) => setNewSite(e.target.value)}
-          />
-          <button onClick={addSite}>Add</button>
-          <ul>
-            {blockedSites.map(site => (
-              <li key={site}>
-                {site}
-                <button onClick={() => removeSite(site)}>❌</button>
-              </li>
+        </div>
+      )}
+
+      {/* Main UI */}
+      <Header {...logic} />
+      <StatsGrid {...logic} />
+      <Tabs {...logic} />
+      {renderTab()}
+
+      {/* Dev Mode / Error Debug Info */}
+      {(logic.connectionStatus === "dev-mode" || logic.connectionStatus === "error") && (
+        <div className="debug-banner">
+          Status: {logic.connectionStatus} | Extension: {logic.isExtension() ? "YES" : "NO"}
+          {logic.lastError && <span> | Error: {logic.lastError}</span>}
+        </div>
+      )}
+
+      {logic.connectionStatus === "error" && (
+        <div className="debug-info">
+          <p>
+            <strong>Timer:</strong> {logic.formatTime?.(logic.seconds)} | {logic.isRunning ? "Running" : "Stopped"}
+          </p>
+          <p>
+            <strong>Mode:</strong> {logic.timerModes?.[logic.currentMode]?.name || "Unknown"}
+          </p>
+          <p>
+            <strong>Connection:</strong> {logic.connectionStatus}
+          </p>
+
+          <button onClick={logic.requestStatus} className="debug-btn">
+            🔄 Test Connection
+          </button>
+
+          <div className="debug-logs">
+            <h4>Recent Logs:</h4>
+            {logic.debugLogs.map((log, index) => (
+              <div key={index} className="debug-log-entry">
+                {log}
+              </div>
             ))}
-          </ul>
-        </>
+          </div>
+        </div>
       )}
     </div>
   );

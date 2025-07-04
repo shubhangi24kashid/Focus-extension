@@ -6,21 +6,17 @@
   "permissions": [
     "storage",
     "declarativeNetRequest",
-    "declarativeNetRequestWithHostAccess"
+    "notifications"
   ],
-  "host_permissions": ["<all_urls>"],
-  "action": {
-    "default_popup": "index.html"
-  },
+  "host_permissions": [
+    "<all_urls>"
+  ],
   "background": {
     "service_worker": "background.js"
   },
-  "web_accessible_resources": [
-    {
-      "resources": ["*"],
-      "matches": ["<all_urls>"]
-    }
-  ],
+  "action": {
+    "default_popup": "index.html"
+  },
   "declarative_net_request": {
     "rule_resources": [
       {
@@ -29,5 +25,11 @@
         "path": "rules.json"
       }
     ]
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["icon16.png", "icon48.png", "icon128.png"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }

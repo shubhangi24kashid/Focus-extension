@@ -1,28 +1,30 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import { viteStaticCopy } from 'vite-plugin-static-copy';
+import { defineConfig } from "vite"
+import react from "@vitejs/plugin-react"
+import { resolve } from "path"
 
 export default defineConfig({
-  plugins: [
-    react(),
-    viteStaticCopy({
-      targets: [
-        {
-          src: 'public/manifest.json',
-          dest: '.' // copies to dist/
-        },
-        {
-          src: 'public/background.js',
-          dest: '.' // copies to dist/
-        },
-        {
-          src: 'public/rules.json',
-          dest: '.' // copies to dist/
-        }
-      ]
-    })
-  ],
+  base: "./", // ← Important for correct asset paths in Chrome Extension
+  plugins: [react()],
   build: {
-    outDir: 'dist'
-  }
-});
+    outDir: "dist",
+    emptyOutDir: true,
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, "index.html"), // popup entry
+      },
+      output: {
+        entryFileNames: "assets/[name].js",
+        chunkFileNames: "assets/[name].js",
+        assetFileNames: "assets/[name].[ext]",
+      },
+    },
+  },
+  define: {
+    global: "globalThis",
+  },
+  resolve: {
+    alias: {
+      "@": resolve(__dirname, "src"),
+    },
+  },
+})

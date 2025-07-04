@@ -1,104 +1,239 @@
-let seconds = 1500;
-let isRunning = false;
-let interval = null;
+console.log("🔄 Background script starting...");
 
-function broadcastUpdate() {
-  chrome.runtime.sendMessage({
-    action: "update",
-    seconds,
-    isRunning,
-  });
+// Timer state
+const timerState = {
+  seconds: 5,
+  isRunning: false,
+  currentMode: 0,
+  interval: null,
+};
+
+// Timer modes
+const TIMER_MODES = [
+  { name: "Focus", duration: 5 },        // in minutes
+  { name: "Short Break", duration: 3 },
+  { name: "Long Break", duration: 8 },
+  { name: "Deep Focus", duration: 10 },
+];
+
+// Initialize timer
+function initTimer() {
+  timerState.seconds = TIMER_MODES[timerState.currentMode].duration * 60;
+  timerState.isRunning = false;
+  if (timerState.interval) {
+    clearInterval(timerState.interval);
+    timerState.interval = null;
+  }
+  console.log("✅ Timer initialized:", timerState);
 }
 
+// Start timer
 function startTimer() {
-  if (interval) return;
-  console.log("⏱️ Timer started");
-  isRunning = true;
+  console.log("🚀 Starting timer...");
 
-  interval = setInterval(() => {
-    seconds--;
-    broadcastUpdate();
+  if (timerState.isRunning) {
+    console.log("⚠️ Timer already running");
+    return { success: true, ...timerState };
+  }
 
-    if (seconds <= 0) {
-      clearInterval(interval);
-      interval = null;
-      isRunning = false;
-      chrome.runtime.sendMessage({ action: "unblock" });
+  timerState.isRunning = true;
+
+  if (timerState.interval) clearInterval(timerState.interval);
+
+  timerState.interval = setInterval(() => {
+    if (timerState.seconds > 0) {
+      timerState.seconds--;
+      console.log(`⏱️ Timer: ${timerState.seconds} seconds remaining`);
+    }
+
+    if (timerState.seconds <= 0) {
+      console.log("⏰ Timer completed!");
+      stopTimer();
+      unblockSites();
+
+      if (chrome.notifications) {
+        chrome.notifications.create({
+          type: "basic",
+          iconUrl: "icon48.png",
+          title: "Timer Complete!",
+          message: `${TIMER_MODES[timerState.currentMode].name} session finished!`,
+        });
+      }
     }
   }, 1000);
+
+  blockSites();
+  console.log("✅ Timer started successfully");
+  return { success: true, ...timerState };
 }
 
-function pauseTimer() {
-  console.log("⏸️ Timer paused");
-  isRunning = false;
-  clearInterval(interval);
-  interval = null;
-  broadcastUpdate();
+// Stop timer
+function stopTimer() {
+  console.log("⏸️ Stopping timer...");
+  timerState.isRunning = false;
+
+  if (timerState.interval) {
+    clearInterval(timerState.interval);
+    timerState.interval = null;
+  }
+
+  unblockSites();
+  console.log("✅ Timer stopped");
+  return { success: true, ...timerState };
 }
 
+// Reset timer
 function resetTimer() {
-  console.log("🔄 Timer reset");
-  seconds = 1500;
-  isRunning = false;
-  clearInterval(interval);
-  interval = null;
-  broadcastUpdate();
+  console.log("🔄 Resetting timer...");
+  stopTimer();
+  timerState.seconds = TIMER_MODES[timerState.currentMode].duration * 60;
+  console.log("✅ Timer reset to", timerState.seconds, "seconds");
+  return { success: true, ...timerState };
 }
 
-function applyBlockingRules() {
-  chrome.storage.sync.get(["blockedSites"], (res) => {
-    const sites = res.blockedSites || [];
+// Set timer mode
+function setTimerMode(mode, seconds) {
+  console.log(`🔧 Setting timer mode to ${mode}, ${seconds} seconds`);
+  stopTimer();
+  timerState.currentMode = mode;
+  timerState.seconds = seconds;
+  console.log("✅ Timer mode set");
+  return { success: true, ...timerState };
+}
 
-    // Create rules with unique IDs starting from 100
+// Get current status
+function getStatus() {
+  return {
+    success: true,
+    seconds: timerState.seconds,
+    isRunning: timerState.isRunning,
+    currentMode: timerState.currentMode,
+    modeName: TIMER_MODES[timerState.currentMode].name,
+  };
+}
+
+// Block sites
+async function blockSites() {
+  try {
+    console.log("🔒 Blocking sites...");
+    const result = await chrome.storage.sync.get(["blockedSites"]);
+    const sites = result.blockedSites || [];
+
+    if (sites.length === 0) {
+      console.log("No sites to block");
+      return { success: true };
+    }
+
+    const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
+    const ruleIds = existingRules.map((rule) => rule.id);
+
+    if (ruleIds.length > 0) {
+      await chrome.declarativeNetRequest.updateDynamicRules({
+        removeRuleIds: ruleIds,
+        addRules: [],
+      });
+    }
+
     const rules = sites.map((site, index) => ({
-      id: 100 + index,
+      id: index + 1,
       priority: 1,
       action: { type: "block" },
       condition: {
-        urlFilter: site,
+        urlFilter: `*://*.${site}/*`,
         resourceTypes: ["main_frame"],
       },
     }));
 
-    const ruleIdsToRemove = rules.map(r => r.id);
+    await chrome.declarativeNetRequest.updateDynamicRules({
+      removeRuleIds: [],
+      addRules: rules,
+    });
 
-    chrome.declarativeNetRequest.updateDynamicRules(
-      {
-        removeRuleIds: ruleIdsToRemove,
-        addRules: rules,
-      },
-      () => console.log("🔒 Sites blocked:", sites)
-    );
-  });
+    console.log("🔒 Sites blocked:", sites);
+    return { success: true, blockedSites: sites };
+  } catch (error) {
+    console.error("❌ Error blocking sites:", error);
+    return { success: false, error: error.message };
+  }
 }
 
-function removeBlockingRules() {
-  chrome.declarativeNetRequest.getDynamicRules((rules) => {
-    const ruleIds = rules.map((r) => r.id).filter(id => id >= 100);
-    chrome.declarativeNetRequest.updateDynamicRules(
-      {
+// Unblock sites
+async function unblockSites() {
+  try {
+    console.log("🔓 Unblocking sites...");
+    const rules = await chrome.declarativeNetRequest.getDynamicRules();
+    const ruleIds = rules.map((rule) => rule.id);
+
+    if (ruleIds.length > 0) {
+      await chrome.declarativeNetRequest.updateDynamicRules({
         removeRuleIds: ruleIds,
         addRules: [],
-      },
-      () => console.log("✅ All dynamic rules removed")
-    );
-  });
+      });
+    }
+
+    console.log("✅ All sites unblocked");
+    return { success: true };
+  } catch (error) {
+    console.error("❌ Error unblocking sites:", error);
+    return { success: false, error: error.message };
+  }
 }
 
-// Handle messages from popup
+// Listen for messages
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log("📩 Message received:", message);
+  console.log("📩 Background received message:", message);
 
-  if (message.action === "start") startTimer();
-  if (message.action === "pause") pauseTimer();
-  if (message.action === "reset") resetTimer();
-  if (message.action === "getStatus") {
-    sendResponse({ seconds, isRunning });
-  }
-  if (message.action === "block") applyBlockingRules();
-  if (message.action === "unblock") removeBlockingRules();
-  if (message.action === "updateBlockList") {
-    removeBlockingRules(); // Clean up
-    setTimeout(() => applyBlockingRules(), 200); // Delay to ensure clean removal
-  }
+  const handleAsync = async () => {
+    try {
+      let response;
+
+      switch (message.action) {
+        case "start":
+          response = startTimer();
+          break;
+        case "pause":
+        case "stop":
+          response = stopTimer();
+          break;
+        case "reset":
+          response = resetTimer();
+          break;
+        case "setTimer":
+          response = setTimerMode(message.mode, message.seconds);
+          break;
+        case "getStatus":
+        case "status":
+          response = getStatus();
+          break;
+        case "block":
+          response = await blockSites();
+          break;
+        case "unblock":
+          response = await unblockSites();
+          break;
+        case "updateBlockList":
+          await unblockSites();
+          setTimeout(async () => {
+            await blockSites();
+          }, 100);
+          response = { success: true };
+          break;
+        default:
+          response = { success: false, error: "Unknown action: " + message.action };
+      }
+
+      console.log("📤 Background sending response:", response);
+      sendResponse(response);
+    } catch (error) {
+      console.error("❌ Background error:", error);
+      sendResponse({ success: false, error: error.message });
+    }
+  };
+
+  handleAsync();
+  return true;
 });
+
+// Initialize on load
+initTimer();
+console.log("✅ Background script loaded successfully");

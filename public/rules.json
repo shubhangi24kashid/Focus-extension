@@ -2,9 +2,11 @@
   {
     "id": 1,
     "priority": 1,
-    "action": { "type": "block" },
+    "action": {
+      "type": "block"
+    },
     "condition": {
-      "urlFilter": "facebook.com",
+      "urlFilter": "example-blocked-site.com",
       "resourceTypes": ["main_frame"]
     }
   }
