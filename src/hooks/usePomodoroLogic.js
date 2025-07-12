@@ -3,7 +3,7 @@ import { getAISuggestion, clearSuggestionHistory } from "../api/aiSuggest";
 
 const DEFAULT_MODES = [
   { name: "Focus", duration: 1500, color: "red", emoji: "🎯" },
-  { name: "Break", duration: 300, color: "blue", emoji: "☕" },
+  { name: "Break", duration: 5, color: "blue", emoji: "☕" },
 ];
 
 export default function usePomodoroLogic(timerModes = DEFAULT_MODES, achievementsData = []) {
@@ -13,7 +13,9 @@ export default function usePomodoroLogic(timerModes = DEFAULT_MODES, achievement
   const [seconds, setSeconds] = useState(safeTimerModes[0]?.duration || 1500);
   const [isRunning, setIsRunning] = useState(false);
   const [tip, setTip] = useState("");
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem("theme") === "dark";
+  });
   const [sessionCount, setSessionCount] = useState(0);
   const [tab, setTab] = useState("timer");
   const [blockedSites, setBlockedSites] = useState([]);
@@ -71,6 +73,17 @@ export default function usePomodoroLogic(timerModes = DEFAULT_MODES, achievement
     const newSeconds = safeTimerModes[currentMode]?.duration || 1500;
     setSeconds(newSeconds);
   }, [currentMode]);
+
+  // 🌙 Theme application to <body>
+  useEffect(() => {
+    document.body.classList.remove("dark-theme", "light-theme");
+    document.body.classList.add(darkMode ? "dark-theme" : "light-theme");
+    localStorage.setItem("theme", darkMode ? "dark" : "light");
+  }, [darkMode]);
+
+  const toggleDarkMode = () => {
+    setDarkMode((prev) => !prev);
+  };
 
   const sendMessage = (action, data = {}) => {
     return new Promise((resolve) => {
@@ -196,6 +209,7 @@ export default function usePomodoroLogic(timerModes = DEFAULT_MODES, achievement
     tab,
     blockedSites,
     darkMode,
+    toggleDarkMode,
     cycle,
     currentMode,
     sessionCount,
