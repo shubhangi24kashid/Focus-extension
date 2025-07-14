@@ -10,13 +10,12 @@ const timerState = {
 
 // Timer modes
 const TIMER_MODES = [
-  { name: "Focus", duration: 5 },        // in minutes
+  { name: "Focus", duration: 5 },
   { name: "Short Break", duration: 3 },
   { name: "Long Break", duration: 8 },
   { name: "Deep Focus", duration: 10 },
 ];
 
-// Initialize timer
 function initTimer() {
   timerState.seconds = TIMER_MODES[timerState.currentMode].duration * 60;
   timerState.isRunning = false;
@@ -27,7 +26,6 @@ function initTimer() {
   console.log("✅ Timer initialized:", timerState);
 }
 
-// Start timer
 function startTimer() {
   console.log("🚀 Starting timer...");
 
@@ -37,7 +35,6 @@ function startTimer() {
   }
 
   timerState.isRunning = true;
-
   if (timerState.interval) clearInterval(timerState.interval);
 
   timerState.interval = setInterval(() => {
@@ -51,14 +48,15 @@ function startTimer() {
       stopTimer();
       unblockSites();
 
-      if (chrome.notifications) {
-        chrome.notifications.create({
-          type: "basic",
-          iconUrl: "icon48.png",
-          title: "Timer Complete!",
-          message: `${TIMER_MODES[timerState.currentMode].name} session finished!`,
-        });
-      }
+      chrome.notifications?.create({
+        type: "basic",
+        iconUrl: "icon48.png",
+        title: "Timer Complete!",
+        message: `${TIMER_MODES[timerState.currentMode].name} session finished!`,
+      });
+
+      // ✅ Tell popup to show new tip
+      chrome.runtime.sendMessage({ action: "sessionEnded" });
     }
   }, 1000);
 
@@ -67,22 +65,18 @@ function startTimer() {
   return { success: true, ...timerState };
 }
 
-// Stop timer
 function stopTimer() {
   console.log("⏸️ Stopping timer...");
   timerState.isRunning = false;
-
   if (timerState.interval) {
     clearInterval(timerState.interval);
     timerState.interval = null;
   }
-
   unblockSites();
   console.log("✅ Timer stopped");
   return { success: true, ...timerState };
 }
 
-// Reset timer
 function resetTimer() {
   console.log("🔄 Resetting timer...");
   stopTimer();
@@ -91,7 +85,6 @@ function resetTimer() {
   return { success: true, ...timerState };
 }
 
-// Set timer mode
 function setTimerMode(mode, seconds) {
   console.log(`🔧 Setting timer mode to ${mode}, ${seconds} seconds`);
   stopTimer();
@@ -101,7 +94,6 @@ function setTimerMode(mode, seconds) {
   return { success: true, ...timerState };
 }
 
-// Get current status
 function getStatus() {
   return {
     success: true,
@@ -112,7 +104,6 @@ function getStatus() {
   };
 }
 
-// Block sites
 async function blockSites() {
   try {
     console.log("🔒 Blocking sites...");
@@ -125,7 +116,7 @@ async function blockSites() {
     }
 
     const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
-    const ruleIds = existingRules.map((rule) => rule.id);
+    const ruleIds = existingRules.map(rule => rule.id);
 
     if (ruleIds.length > 0) {
       await chrome.declarativeNetRequest.updateDynamicRules({
@@ -157,12 +148,11 @@ async function blockSites() {
   }
 }
 
-// Unblock sites
 async function unblockSites() {
   try {
     console.log("🔓 Unblocking sites...");
     const rules = await chrome.declarativeNetRequest.getDynamicRules();
-    const ruleIds = rules.map((rule) => rule.id);
+    const ruleIds = rules.map(rule => rule.id);
 
     if (ruleIds.length > 0) {
       await chrome.declarativeNetRequest.updateDynamicRules({
@@ -179,7 +169,6 @@ async function unblockSites() {
   }
 }
 
-// Listen for messages
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log("📩 Background received message:", message);
 
@@ -234,6 +223,5 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return true;
 });
 
-// Initialize on load
 initTimer();
 console.log("✅ Background script loaded successfully");

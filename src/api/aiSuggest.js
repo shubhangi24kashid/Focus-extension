@@ -1,6 +1,7 @@
-import axios from "axios"
+import axios from "axios";
 
-const getAPIKey = () => import.meta.env.VITE_OPENAI_API_KEY
+// 🔴 TODO: Remove your API key from code and move it to env file in production.
+const OPENAI_API_KEY = "";
 
 // Fallback Suggestions
 const fallbackTips = [
@@ -29,44 +30,42 @@ const fallbackTips = [
   "Do 10 gentle toe touches to stretch your back and legs.",
   "Close your eyes and visualize your next successful focus session.",
   "Organize one small area of your space for a sense of accomplishment.",
-]
+];
 
-// Store previous suggestions
+// Store previous suggestions to avoid repeats
 const storePreviousSuggestion = (suggestion) => {
   try {
-    const previous = JSON.parse(localStorage.getItem("previousSuggestions") || "[]")
-    previous.push(suggestion)
-    if (previous.length > 10) previous.shift()
-    localStorage.setItem("previousSuggestions", JSON.stringify(previous))
+    const previous = JSON.parse(localStorage.getItem("previousSuggestions") || "[]");
+    previous.push(suggestion);
+    if (previous.length > 10) previous.shift();
+    localStorage.setItem("previousSuggestions", JSON.stringify(previous));
   } catch (error) {
-    console.warn("Could not store previous suggestion:", error)
+    console.warn("Could not store previous suggestion:", error);
   }
-}
+};
 
-// Get fallback suggestion (avoids duplicates)
+// Get fallback suggestion avoiding duplicates
 const getFallbackSuggestion = () => {
-  let previous = []
+  let previous = [];
   try {
-    previous = JSON.parse(localStorage.getItem("previousSuggestions") || "[]")
+    previous = JSON.parse(localStorage.getItem("previousSuggestions") || "[]");
   } catch (error) {
-    console.warn("Could not read previous suggestions:", error)
+    console.warn("Could not read previous suggestions:", error);
   }
 
-  const available = fallbackTips.filter((tip) => !previous.includes(tip))
-  const tipsToUse = available.length > 0 ? available : fallbackTips
-  const tip = tipsToUse[Math.floor(Math.random() * tipsToUse.length)]
+  const available = fallbackTips.filter((tip) => !previous.includes(tip));
+  const tipsToUse = available.length > 0 ? available : fallbackTips;
+  const tip = tipsToUse[Math.floor(Math.random() * tipsToUse.length)];
 
-  storePreviousSuggestion(tip)
-  return tip
-}
+  storePreviousSuggestion(tip);
+  return tip;
+};
 
-// Get AI-based suggestion
+// Fetch AI suggestion from OpenAI
 export const getAISuggestion = async () => {
-  const OPENAI_API_KEY = getAPIKey()
-
   if (!OPENAI_API_KEY) {
-    console.warn("OpenAI API key not found, using fallback")
-    return getFallbackSuggestion()
+    console.warn("OpenAI API key not found, using fallback");
+    return getFallbackSuggestion();
   }
 
   const prompts = [
@@ -78,9 +77,9 @@ export const getAISuggestion = async () => {
     "Give me a quick stress-relief technique in 1 sentence.",
     "Recommend a brief physical activity for my break in 1 sentence.",
     "Share a mindful breathing exercise in 1 sentence.",
-  ]
+  ];
 
-  const randomPrompt = prompts[Math.floor(Math.random() * prompts.length)]
+  const randomPrompt = prompts[Math.floor(Math.random() * prompts.length)];
 
   try {
     const res = await axios.post(
@@ -106,40 +105,35 @@ export const getAISuggestion = async () => {
           "Content-Type": "application/json",
         },
         timeout: 10000,
-      },
-    )
+      }
+    );
 
-    const suggestion = res.data.choices[0]?.message?.content?.trim()
+    const suggestion = res.data.choices[0]?.message?.content?.trim();
     if (suggestion) {
-      storePreviousSuggestion(suggestion)
-      return suggestion
+      storePreviousSuggestion(suggestion);
+      return suggestion;
     } else {
-      return getFallbackSuggestion()
+      return getFallbackSuggestion();
     }
   } catch (err) {
-    console.error("❌ AI Suggestion Error:", err)
-
-    if (err.response?.status === 401) console.error("Invalid OpenAI API key")
-    else if (err.response?.status === 429) console.error("Rate limit exceeded")
-    else if (err.code === "ECONNABORTED") console.error("Request timed out")
-
-    return getFallbackSuggestion()
+    console.error("❌ AI Suggestion Error:", err);
+    return getFallbackSuggestion();
   }
-}
+};
 
-// Context-aware suggestion
+// Contextual AI suggestion (time-aware)
 export const getContextualSuggestion = async () => {
-  const hour = new Date().getHours()
-  const OPENAI_API_KEY = getAPIKey()
+  const hour = new Date().getHours();
 
-  let contextPrompt = hour < 12
-    ? "Suggest a morning break activity to boost energy and focus in 1 sentence."
-    : hour < 17
-    ? "Recommend an afternoon break activity to maintain productivity in 1 sentence."
-    : "Share an evening break activity to help wind down while staying focused in 1 sentence."
+  const contextPrompt =
+    hour < 12
+      ? "Suggest a morning break activity to boost energy and focus in 1 sentence."
+      : hour < 17
+      ? "Recommend an afternoon break activity to maintain productivity in 1 sentence."
+      : "Share an evening break activity to help wind down while staying focused in 1 sentence.";
 
   if (!OPENAI_API_KEY) {
-    return getFallbackSuggestion()
+    return getFallbackSuggestion();
   }
 
   try {
@@ -163,23 +157,23 @@ export const getContextualSuggestion = async () => {
           "Content-Type": "application/json",
         },
         timeout: 10000,
-      },
-    )
+      }
+    );
 
-    const suggestion = res.data.choices[0]?.message?.content?.trim()
+    const suggestion = res.data.choices[0]?.message?.content?.trim();
     if (suggestion) {
-      storePreviousSuggestion(suggestion)
-      return suggestion
+      storePreviousSuggestion(suggestion);
+      return suggestion;
     } else {
-      return getFallbackSuggestion()
+      return getFallbackSuggestion();
     }
   } catch (err) {
-    console.error("❌ Contextual Suggestion Error:", err)
-    return getFallbackSuggestion()
+    console.error("❌ Contextual Suggestion Error:", err);
+    return getFallbackSuggestion();
   }
-}
+};
 
-// For dev/testing: Clear stored suggestions
+// Clear stored suggestions
 export const clearSuggestionHistory = () => {
-  localStorage.removeItem("previousSuggestions")
-}
+  localStorage.removeItem("previousSuggestions");
+};

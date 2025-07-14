@@ -13,9 +13,7 @@ export default function usePomodoroLogic(timerModes = DEFAULT_MODES, achievement
   const [seconds, setSeconds] = useState(safeTimerModes[0]?.duration || 1500);
   const [isRunning, setIsRunning] = useState(false);
   const [tip, setTip] = useState("");
-  const [darkMode, setDarkMode] = useState(() => {
-    return localStorage.getItem("theme") === "dark";
-  });
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem("theme") === "dark");
   const [sessionCount, setSessionCount] = useState(0);
   const [tab, setTab] = useState("timer");
   const [blockedSites, setBlockedSites] = useState([]);
@@ -36,9 +34,8 @@ export default function usePomodoroLogic(timerModes = DEFAULT_MODES, achievement
 
   const intervalRef = useRef(null);
 
-  const isExtension = () => {
-    return typeof window !== "undefined" && window.chrome && window.chrome.runtime;
-  };
+  const isExtension = () =>
+    typeof window !== "undefined" && window.chrome && window.chrome.runtime;
 
   const addLog = (message) => {
     const timestamp = new Date().toLocaleTimeString();
@@ -51,6 +48,15 @@ export default function usePomodoroLogic(timerModes = DEFAULT_MODES, achievement
     addLog(`Extension context: ${isExtension() ? "YES" : "NO"}`);
     loadStoredData();
     requestStatus();
+
+    if (isExtension()) {
+      chrome.runtime.onMessage.addListener((message) => {
+        if (message.action === "sessionEnded") {
+          addLog("⏰ Session ended! Fetching new AI Tip...");
+          getNewTip();
+        }
+      });
+    }
   }, []);
 
   useEffect(() => {
@@ -63,27 +69,27 @@ export default function usePomodoroLogic(timerModes = DEFAULT_MODES, achievement
     return () => clearInterval(intervalRef.current);
   }, [isRunning]);
 
+  // ⏰ Auto-fetch tip when timer ends (Focus / Break modes only)
   useEffect(() => {
     if (seconds <= 0 && isRunning) {
       setIsRunning(false);
+      if (currentMode === 0 || currentMode === 1) {
+        getNewTip();
+      }
     }
-  }, [seconds, isRunning]);
+  }, [seconds, isRunning, currentMode]);
 
   useEffect(() => {
-    const newSeconds = safeTimerModes[currentMode]?.duration || 1500;
-    setSeconds(newSeconds);
+    setSeconds(safeTimerModes[currentMode]?.duration || 1500);
   }, [currentMode]);
 
-  // 🌙 Theme application to <body>
   useEffect(() => {
     document.body.classList.remove("dark-theme", "light-theme");
     document.body.classList.add(darkMode ? "dark-theme" : "light-theme");
     localStorage.setItem("theme", darkMode ? "dark" : "light");
   }, [darkMode]);
 
-  const toggleDarkMode = () => {
-    setDarkMode((prev) => !prev);
-  };
+  const toggleDarkMode = () => setDarkMode((prev) => !prev);
 
   const sendMessage = (action, data = {}) => {
     return new Promise((resolve) => {
@@ -139,11 +145,7 @@ export default function usePomodoroLogic(timerModes = DEFAULT_MODES, achievement
         setAutoBreak(result.autoBreak !== false);
         setSoundEnabled(result.soundEnabled !== false);
         setSessionCount(result.sessionCount || 0);
-
-        const modeIndex = result.currentMode ?? 0;
-        const safeIndex = modeIndex < safeTimerModes.length ? modeIndex : 0;
-        setCurrentMode(safeIndex);
-
+        setCurrentMode(result.currentMode ?? 0);
         if (result.achievements) setAchievements(result.achievements);
       } catch (error) {
         addLog("Error loading stored data");

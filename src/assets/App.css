@@ -869,21 +869,20 @@ body {
 
 /* ===== OPTIMIZED TIP CONTAINER ===== */
 .tip-container {
-  background: var(--bg-card);
-  border: 2px solid var(--border-color);
-  border-left: 4px solid var(--warning);
-  border-radius: var(--radius-lg);
-  padding: var(--space-5);
-  margin: var(--space-5) 0 0 0;
-  display: flex;
-  gap: var(--space-4);
+display: flex;
   align-items: flex-start;
-  flex-shrink: 0;
+  gap: 10px;
+  background: var(--bg-secondary, #f0f0f0);
+  padding: 8px;
+  border-radius: 10px;
+  margin-top: 1rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .tip-icon {
-  font-size: var(--text-xl);
   flex-shrink: 0;
+  font-size: 1.8rem;
   color: var(--warning);
   margin: 0;
   padding: var(--space-2);
@@ -891,8 +890,11 @@ body {
 
 .tip-content {
   flex: 1;
-  margin: 0;
-  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  word-wrap: break-word;
+  word-break: break-word;
 }
 
 .tip-header {
@@ -901,15 +903,16 @@ body {
   align-items: center;
   margin: 0 0 var(--space-3) 0;
   padding: 0;
+  margin-bottom: 0; 
 }
 
 .tip-title {
-  font-size: var(--text-base);
-  font-weight: 700;
   color: var(--text-primary);
   line-height: 1.2;
   margin: 0;
   padding: 0;
+  font-weight: 550;
+  font-size: 1rem;
 }
 
 .refresh-tip-btn {
