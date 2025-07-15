@@ -1,12 +1,12 @@
 [
   {
-    "id": 1,
+    "id": 1001,
     "priority": 1,
     "action": {
       "type": "block"
     },
     "condition": {
-      "urlFilter": "example-blocked-site.com",
+      "urlFilter": "*://*.example-blocked-site.com/*",
       "resourceTypes": ["main_frame"]
     }
   }

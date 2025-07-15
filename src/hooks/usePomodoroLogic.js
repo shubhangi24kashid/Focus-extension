@@ -69,7 +69,6 @@ export default function usePomodoroLogic(timerModes = DEFAULT_MODES, achievement
     return () => clearInterval(intervalRef.current);
   }, [isRunning]);
 
-  // ⏰ Auto-fetch tip when timer ends (Focus / Break modes only)
   useEffect(() => {
     if (seconds <= 0 && isRunning) {
       setIsRunning(false);
@@ -204,6 +203,29 @@ export default function usePomodoroLogic(timerModes = DEFAULT_MODES, achievement
     }
   };
 
+  const addSite = async () => {
+  if (newSite.trim() === "") return;
+
+  let url = newSite.trim().replace(/^https?:\/\//, "").replace(/\/.*$/, "");
+  url = url.replace(/^www\./, "");
+
+  if (!blockedSites.includes(url)) {
+    const updatedSites = [...blockedSites, url];
+    setBlockedSites(updatedSites);
+    await chrome.storage.sync.set({ blockedSites: updatedSites });
+    chrome.runtime.sendMessage({ action: "updateBlockList" });
+  }
+  setNewSite("");
+};
+
+
+  const removeSite = async (siteToRemove) => {
+    const updatedSites = blockedSites.filter(site => site !== siteToRemove);
+    setBlockedSites(updatedSites);
+    await chrome.storage.sync.set({ blockedSites: updatedSites });
+    chrome.runtime.sendMessage({ action: "updateBlockList" });
+  };
+
   return {
     seconds,
     isRunning,
@@ -253,6 +275,8 @@ export default function usePomodoroLogic(timerModes = DEFAULT_MODES, achievement
     setTodaysSessions,
     setFocusStreak,
     setCurrentMode,
-    setCycle
+    setCycle,
+    addSite,
+    removeSite,
   };
 }

@@ -890,9 +890,9 @@ display: flex;
   align-items: flex-start;
   gap: 10px;
   background: var(--bg-secondary, #f0f0f0);
-  padding: 6px;
+  padding: 8px;
   border-radius: 10px;
-  margin-top: 0.8rem;
+  margin-top: 1rem;
   width: 100%;
   box-sizing: border-box;
 }
