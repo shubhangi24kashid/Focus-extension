@@ -124,10 +124,26 @@ body.light-theme {
   box-sizing: border-box;
 }
 
+/* Fix popup dimensions and scrolling */
 html,
 body {
   width: 380px;
-  height: 600px;
+  height: 800px;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+html,
+body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: var(--text-base);
   line-height: 1.4;
@@ -402,13 +418,15 @@ body {
 }
 
 /* ===== OPTIMIZED TAB CONTENT CONTAINER ===== */
+/* Fix tab content scrolling */
 .tab-content {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
   min-height: 0;
-  padding: var(--space-3);
+  padding: 6px;
   margin: 0;
+  max-height: calc(600px - 200px); /* Reserve space for header/tabs */
 }
 
 .tab-content::-webkit-scrollbar {
@@ -429,13 +447,15 @@ body {
 }
 
 /* ===== FULL WIDTH TIMER TAB - VERTICAL LAYOUT ===== */
+/* Fix timer tab specific layout */
 .timer-tab-content {
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
+  gap: 16px;
   height: 100%;
-  padding: var(--space-2);
+  padding: 0;
   margin: 0;
+  overflow-y: auto;
 }
 
 /* FULL WIDTH: Mode Selector - Horizontal Layout */
@@ -547,18 +567,181 @@ body {
   opacity: 0.8;
 }
 
+/* Timer container improvements */
 .timer-container {
-  position: relative;
-  z-index: 1;
   background: var(--bg-surface);
-  border-radius: 10px;
-  padding: 1.5rem;
-  text-align: center;
-  margin-bottom: 1.5rem;
+  border-radius: 12px;
+  padding: 16px;
   border: 2px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+/* ===== ENHANCED TIMER MODE GRID - SMALLER BUTTONS ===== */
+/* Enhanced timer mode grid - better spacing */
+.timer-mode-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 8px !important;
+  margin-bottom: 16px !important;
+  padding: 0 !important;
+  flex-shrink: 0;
+}
+
+/* Timer mode buttons - improved styling */
+.timer-mode-btn {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 8px 10px !important;
+  border: 2px solid var(--border-color) !important;
+  border-radius: 8px !important;
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  height: 55px !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+  text-align: left !important;
+}
+
+.timer-mode-btn:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+.timer-mode-btn.active {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.timer-mode-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+  padding: var(--space-2);
+}
+
+.timer-mode-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--transition);
+  height: 60px;
+  font-weight: 600;
+  position: relative;
+  overflow: hidden;
+}
+
+.timer-mode-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: transparent;
+}
+
+.timer-mode-btn.active {
+  border-color: transparent;
+  color: var(--text-white);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+
+.timer-mode-btn.active::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: inherit;
+  z-index: -1;
+}
+
+/* Mode content styling */
+.mode-emoji-small {
+  font-size: 16px !important;
+  flex-shrink: 0 !important;
+  line-height: 1 !important;
+}
+
+.mode-info-small {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+.mode-name-small {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  line-height: 1.1 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.mode-time-small {
+  font-size: 10px !important;
+  opacity: 0.8 !important;
+  font-weight: 500 !important;
+  line-height: 1 !important;
+}
+
+.mode-emoji-small {
+  font-size: var(--text-lg);
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.mode-info-small {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex: 1;
+  min-width: 0;
+}
+
+.mode-name-small {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  line-height: 1.1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mode-time-small {
+  font-size: var(--text-xs);
+  opacity: 0.8;
+  font-weight: 500;
+  line-height: 1;
 }
 
 /* FULL WIDTH: Timer Display */
+/* Timer display improvements */
+.timer-display {
+  font-size: 42px !important;
+  font-weight: 800;
+  padding: 20px !important;
+  margin: 0 0 12px 0;
+  border-radius: 8px;
+  height: 100px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -1px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
 .timer-display {
   font-size: 48px;
   font-weight: 800;
@@ -701,7 +884,7 @@ body {
 }
 
 .site-input {
-    flex: 1;
+  flex: 1;
   padding: 2px 6px;
   padding-left: 2px;
   margin-left: 2px;
@@ -717,7 +900,7 @@ body {
 }
 
 .site-input:focus {
-   outline: none;
+  outline: none;
   border-color: var(--primary);
   box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.1);
 }
@@ -829,7 +1012,6 @@ body {
 
 .empty-state small {
   font-size: 8px;
-  color: var(--text-muted);
 }
 
 /* ===== OPTIMIZED TIP CONTAINER ===== */
@@ -850,8 +1032,9 @@ body.dark-theme .tip-container {
   padding: 12px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
 }
+
 .tip-container {
-display: flex;
+  display: flex;
   align-items: flex-start;
   gap: 10px;
   background: var(--bg-secondary, #f0f0f0);
@@ -885,7 +1068,7 @@ display: flex;
   align-items: center;
   margin: 0 0 var(--space-3) 0;
   padding: 0;
-  margin-bottom: 0; 
+  margin-bottom: 0;
 }
 
 .tip-title {
@@ -1343,6 +1526,34 @@ display: flex;
 }
 
 /* ===== RESPONSIVE ADJUSTMENTS ===== */
+/* Responsive design for extension popup */
+@media (max-width: 380px) {
+  .timer-mode-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6px !important;
+  }
+
+  .timer-mode-btn {
+    height: 50px !important;
+    padding: 6px 8px !important;
+    gap: 6px !important;
+  }
+
+  .mode-emoji-small {
+    font-size: 14px !important;
+  }
+
+  .mode-name-small {
+    font-size: 10px !important;
+  }
+
+  .timer-display {
+    font-size: 36px !important;
+    height: 90px !important;
+    padding: 16px !important;
+  }
+}
+
 @media (max-width: 380px) {
   body {
     padding: var(--space-4);
@@ -1374,6 +1585,29 @@ display: flex;
     gap: var(--space-4);
     height: 40px;
   }
+
+  .timer-mode-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-2);
+  }
+
+  .timer-mode-btn {
+    height: 55px;
+    padding: var(--space-2) var(--space-3);
+    gap: var(--space-2);
+  }
+
+  .mode-emoji-small {
+    font-size: var(--text-base);
+  }
+
+  .mode-name-small {
+    font-size: var(--text-xs);
+  }
+
+  .mode-time-small {
+    font-size: 10px;
+  }
 }
 
 /* ===== ACCESSIBILITY ===== */
@@ -1392,6 +1626,7 @@ display: flex;
 .icon-btn:focus-visible,
 .control-btn:focus-visible,
 .mode-btn:focus-visible,
+.timer-mode-btn:focus-visible,
 .add-btn:focus-visible,
 .remove-btn:focus-visible,
 .refresh-tip-btn:focus-visible,
@@ -1466,7 +1701,7 @@ display: flex;
 }
 
 .bg-gradient-emerald {
-  background: var(--gradient-success);
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
 }
 
 .bg-gradient-violet {
@@ -1558,4 +1793,67 @@ display: flex;
 
 .mode-deep-work {
   background: var(--gradient-purple);
+}
+
+/* Dark theme adjustments for new buttons */
+body.dark-theme .timer-mode-btn {
+  background: var(--bg-card);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+body.dark-theme .timer-mode-btn:hover {
+  border-color: transparent;
+}
+
+body.dark-theme .timer-mode-btn.active {
+  color: var(--text-white);
+}
+
+/* Loading state for timer buttons */
+.timer-mode-btn.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Animation for mode switching */
+.timer-mode-btn {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Enhanced hover effects */
+.timer-mode-btn:not(.active):hover .mode-emoji-small {
+  transform: scale(1.1);
+  transition: transform var(--transition);
+}
+
+.timer-mode-btn:not(.active):hover .mode-name-small {
+  color: var(--primary);
+  transition: color var(--transition);
+}
+
+/* Active state enhancements */
+.timer-mode-btn.active .mode-emoji-small {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
 }

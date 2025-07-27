@@ -2,8 +2,12 @@ import { useEffect, useState, useRef } from "react";
 import { getAISuggestion, clearSuggestionHistory } from "../api/aiSuggest";
 
 const DEFAULT_MODES = [
-  { name: "Focus", duration: 1500, color: "red", emoji: "🎯" },
-  { name: "Break", duration: 5, color: "blue", emoji: "☕" },
+ { name: "Quick Focus", duration: 120, color: "emerald", emoji: "⚡", type: "focus" },
+    { name: "Focus 10m", duration: 5, color: "cyan", emoji: "📚", type: "focus" },
+    { name: "Focus 15m", duration: 900, color: "blue", emoji: "🎯", type: "focus" },
+    { name: "Pomodoro", duration: 1500, color: "purple", emoji: "🍅", type: "focus" },
+    { name: "Short Break", duration: 300, color: "orange", emoji: "☕", type: "break" },
+    { name: "Long Break", duration: 900, color: "yellow", emoji: "🌴", type: "break" },
 ];
 
 export default function usePomodoroLogic(timerModes = DEFAULT_MODES, achievementsData = []) {
@@ -223,8 +227,9 @@ export default function usePomodoroLogic(timerModes = DEFAULT_MODES, achievement
     const updatedSites = blockedSites.filter(site => site !== siteToRemove);
     setBlockedSites(updatedSites);
     await chrome.storage.sync.set({ blockedSites: updatedSites });
-    chrome.runtime.sendMessage({ action: "updateBlockList" });
-  };
+    await chrome.runtime.sendMessage({ action: "updateBlockList", sites: updatedSites });
+};
+
 
   return {
     seconds,
