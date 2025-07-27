@@ -217,7 +217,7 @@ export default function usePomodoroLogic(timerModes = DEFAULT_MODES, achievement
     const updatedSites = [...blockedSites, url];
     setBlockedSites(updatedSites);
     await chrome.storage.sync.set({ blockedSites: updatedSites });
-    chrome.runtime.sendMessage({ action: "updateBlockList" });
+    chrome.runtime.sendMessage({ action: "updateBlockList", sites: updatedSites }); // <-- pass sites here
   }
   setNewSite("");
 };
